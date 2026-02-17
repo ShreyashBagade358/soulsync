@@ -100,7 +100,33 @@ const Onboarding = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { user } = useAuthStore();
+  const { user, isAuthenticated, logout } = useAuthStore();
+  
+  // Check authentication
+  useEffect(() => {
+    if (!isAuthenticated || !user) {
+      toast.error('Please login first');
+      navigate('/login');
+    }
+  }, [isAuthenticated, user, navigate]);
+  
+  // Handle 401 errors globally
+  useEffect(() => {
+    const interceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401) {
+          toast.error('Session expired. Please login again.');
+          logout();
+          navigate('/login');
+        }
+        return Promise.reject(error);
+      }
+    );
+    
+    return () => axios.interceptors.response.eject(interceptor);
+  }, [logout, navigate]);
+  
   const [formData, setFormData] = useState({
     // Basic Info
     firstName: '',
