@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Camera, Heart, Film, Music, Utensils, Compass, ChevronRight, ChevronLeft, Check } from 'lucide-react';
+import { Camera, Heart, Film, Music, Utensils, Compass, ChevronRight, ChevronLeft, Check, MapPin } from 'lucide-react';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 import { useAuthStore } from '../stores/authStore.jsx';
