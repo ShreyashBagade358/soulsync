@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useMessageStore } from '../stores/messageStore.jsx';
 import { useSocketStore } from '../stores/socketStore.jsx';
+import { useAuthStore } from '../stores/authStore.jsx';
 import { Send, ArrowLeft, Heart, MoreVertical, Phone, Video, Image, Smile, Check, CheckCheck } from 'lucide-react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -11,6 +12,7 @@ const Messages = () => {
   const navigate = useNavigate();
   const { messages, fetchMessages, sendMessage, markAsRead } = useMessageStore();
   const { joinMatch, leaveMatch, sendTyping, stopTyping, typingUsers } = useSocketStore();
+  const { user } = useAuthStore();
   const [newMessage, setNewMessage] = useState('');
   const [matchInfo, setMatchInfo] = useState(null);
   const [isTyping, setIsTyping] = useState(false);
@@ -20,7 +22,7 @@ const Messages = () => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   const matchMessages = messages[matchId] || [];
-  const currentUserId = JSON.parse(localStorage.getItem('auth-storage'))?.state?.user?.id;
+  const currentUserId = user?.id;
 
   useEffect(() => {
     fetchMatchInfo();
@@ -231,7 +233,10 @@ const Messages = () => {
 
               {/* Messages for this date */}
               {dateMessages.map((message, idx) => {
-                const isOwn = message.senderId === currentUserId;
+                // Convert both IDs to strings for comparison
+                const messageSenderId = String(message.senderId || message.sender || '').trim();
+                const currentUserIdStr = String(currentUserId || '').trim();
+                const isOwn = messageSenderId === currentUserIdStr;
                 const showAvatar = !isOwn && (idx === 0 || dateMessages[idx - 1]?.senderId !== message.senderId);
 
                 return (
