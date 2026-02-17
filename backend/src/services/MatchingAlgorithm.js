@@ -187,8 +187,9 @@ class MatchingAlgorithm {
   }
 
   async getFilteredCandidates(userProfile, userPrefs, excludedIds) {
+    const mongoose = require('mongoose');
     const query = {
-      userId: { $nin: excludedIds.map(id => new require('mongoose').Types.ObjectId(id)) },
+      userId: { $nin: excludedIds.map(id => new mongoose.Types.ObjectId(id)) },
       isActive: true
     };
 

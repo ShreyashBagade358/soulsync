@@ -26,13 +26,21 @@ const Browse = () => {
   }, []);
 
   useEffect(() => {
-    filterUsers();
-  }, [searchQuery, selectedGender, selectedInterests, users]);
+    searchUsers();
+  }, [selectedGender]);
+
+  // Debounced search by name
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      searchUsers();
+    }, 300);
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
 
   const fetchUsers = async () => {
     try {
       setIsLoading(true);
-      const response = await axios.get('/recommendation/discover?limit=100');
+      const response = await axios.get('/profile/all/list');
       const profiles = response.data?.profiles || [];
       setUsers(profiles);
       setFilteredUsers(profiles);
@@ -44,31 +52,33 @@ const Browse = () => {
     }
   };
 
+  const searchUsers = async () => {
+    try {
+      const params = new URLSearchParams();
+      if (searchQuery.trim()) {
+        params.append('search', searchQuery.trim());
+      }
+      if (selectedGender !== 'all') {
+        params.append('gender', selectedGender);
+      }
+      
+      const response = await axios.get(`/profile/all/list?${params.toString()}`);
+      const profiles = response.data?.profiles || [];
+      setFilteredUsers(profiles);
+    } catch (error) {
+      console.error('Error searching users:', error);
+    }
+  };
+
+  // Client-side filtering for interests only
   const filterUsers = () => {
-    let filtered = [...users];
-
-    if (selectedGender !== 'all') {
-      filtered = filtered.filter(user => user.gender === selectedGender);
-    }
-
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(user => 
-        user.firstName?.toLowerCase().includes(query) ||
-        user.bio?.toLowerCase().includes(query) ||
-        user.location?.city?.toLowerCase().includes(query) ||
-        user.interests?.some(interest => interest.toLowerCase().includes(query))
-      );
-    }
-
-    if (selectedInterests.length > 0) {
-      filtered = filtered.filter(user => 
-        selectedInterests.some(interest => 
-          user.interests?.includes(interest)
-        )
-      );
-    }
-
+    if (selectedInterests.length === 0) return;
+    
+    const filtered = filteredUsers.filter(user => 
+      selectedInterests.some(interest => 
+        user.interests?.includes(interest)
+      )
+    );
     setFilteredUsers(filtered);
   };
 
@@ -217,7 +227,7 @@ const Browse = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by name, city, or interests..."
+              placeholder="Search by name..."
               className="w-full bg-gray-800/80 border border-gray-700 text-white pl-12 pr-12 py-4 rounded-2xl focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all placeholder-gray-500"
             />
             {searchQuery && (

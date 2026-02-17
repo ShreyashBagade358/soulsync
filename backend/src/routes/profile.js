@@ -240,4 +240,39 @@ function calculateProfileCompleteness(profile) {
   return Math.min(score, maxScore);
 }
 
+// Get all profiles for browse page
+router.get('/all/list', authenticate, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { search, gender } = req.query;
+
+    // Build query
+    const query = {
+      userId: { $ne: userId } // Exclude current user
+    };
+
+    // Filter by gender
+    if (gender && gender !== 'all') {
+      query.gender = gender;
+    }
+
+    // Search by name
+    if (search && search.trim()) {
+      query.firstName = { $regex: search.trim(), $options: 'i' };
+    }
+
+    const profiles = await Profile.find(query)
+      .select('userId firstName lastName dateOfBirth gender bio photos location occupation education interests hobbies isVerified')
+      .limit(100);
+
+    res.json({
+      profiles,
+      total: profiles.length
+    });
+  } catch (error) {
+    console.error('Get all profiles error:', error);
+    res.status(500).json({ error: 'Failed to fetch profiles' });
+  }
+});
+
 module.exports = router;
